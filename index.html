@@ -2,63 +2,15 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Asteroids Survival - Power-Ups + Split + Boss</title>
+<title>Asteroids Survival PRO - Test.V4.4 Glow Power-Ups</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <style>
-  body {
-    margin: 0;
-    padding: 0;
-    background: #000;
-    overflow: hidden;
-    touch-action: none;
-    font-family: Arial, sans-serif;
-  }
-  canvas {
-    display: block;
-    touch-action: none;
-  }
-  #start {
-    position: absolute;
-    inset: 0;
-    background: rgba(0,0,0,0.8);
-    color: #0f0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    z-index: 10;
-    font-size: 24px;
-  }
-  #gameover {
-    position: absolute;
-    inset: 0;
-    background: rgba(0,0,0,0.9);
-    color: #f44;
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
-    font-size: 32px;
-  }
-  #ui {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    color: white;
-    font-size: 18px;
-    pointer-events: none;
-    z-index: 5;
-  }
-  button {
-    margin-top: 20px;
-    padding: 15px 40px;
-    font-size: 22px;
-    background: #222;
-    color: white;
-    border: 2px solid #0f0;
-  }
+  body { margin:0; padding:0; background:#000; overflow:hidden; touch-action:none; font-family:Arial,sans-serif; }
+  canvas { display:block; touch-action:none; }
+  #start { position:absolute; inset:0; background:rgba(0,0,0,0.8); color:#0f0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; z-index:10; font-size:24px; }
+  #gameover { position:absolute; inset:0; background:rgba(0,0,0,0.9); color:#f44; display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10; font-size:32px; }
+  #ui { position:absolute; top:10px; left:10px; color:white; font-size:18px; pointer-events:none; z-index:5; }
+  button { margin-top:20px; padding:15px 40px; font-size:22px; background:#222; color:white; border:2px solid #0f0; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -71,9 +23,10 @@
 </div>
 
 <div id="start">
-  <h1>Asteroids Survival PRO</h1>
+  <h1>Asteroids Survival PRO - Test.V4.4</h1>
   <p>¡Toca la pantalla para empezar!</p>
-  <p>Arrastra para mover<br>Toca para disparar</p>
+  <p>Arrastra para mover • Toca para disparar</p>
+  <p>Power-ups con glow de color</p>
   <button onclick="startGame()">JUGAR</button>
 </div>
 
@@ -114,7 +67,7 @@ const ship = {
   x: w/2, y: h/2,
   angle: -Math.PI/2,
   radius: 15,
-  powerup: null,  // 'multi', 'rapid', 'shield'
+  powerup: null,
   powerupTime: 0
 };
 
@@ -160,7 +113,7 @@ function spawnAsteroids(count, size = 'large') {
       vx: (Math.random()-0.5)*2.8,
       vy: (Math.random()-0.5)*2.8,
       size: size === 'large' ? 35 + Math.random()*30 : size === 'med' ? 20 + Math.random()*15 : 10 + Math.random()*8,
-      type: size,  // 'large', 'med', 'small'
+      type: size,
       angle: Math.random()*Math.PI*2,
       rotSpeed: (Math.random()-0.5)*0.05
     });
@@ -170,7 +123,7 @@ function spawnAsteroids(count, size = 'large') {
 function spawnBoss() {
   bossActive = true;
   bossHP = 80 + Math.floor(score / 1000);
-  asteroids.push({  // Boss como ast gigante
+  asteroids.push({
     x: w/2, y: -100,
     vx: 0, vy: 1.2,
     size: 80,
@@ -182,7 +135,7 @@ function spawnBoss() {
   });
 }
 
-// Touch
+// Touch controls
 canvas.addEventListener('touchstart', e => {
   e.preventDefault();
   if (!running) { startGame(); return; }
@@ -233,26 +186,50 @@ function fire() {
 }
 
 function loop() {
-  if (!running) return;
+  if (!running) return requestAnimationFrame(loop);
 
   ctx.fillStyle = 'rgba(0,5,15,0.18)';
   ctx.fillRect(0,0,w,h);
 
-  // Ship wrap & update powerup
+  // Nave wrap & powerup timer
   ship.x = (ship.x + w) % w;
   ship.y = (ship.y + h) % h;
   if (ship.powerupTime > 0) ship.powerupTime--;
   else ship.powerup = null;
 
-  // Draw ship
+  // Dibujar nave con glow de color según power-up
   ctx.save();
   ctx.translate(ship.x, ship.y);
   ctx.rotate(ship.angle);
-  ctx.fillStyle = ship.powerup === 'shield' ? '#ff0' : '#0ff';
+
+  // Glow y color personalizado
+  let shipColor = '#0ff';  // default
+  let glowColor = null;
+  let glowStrength = 0;
+
+  switch (ship.powerup) {
+    case 'shield':
+      shipColor = '#ff0'; glowColor = '#ff0'; glowStrength = 25; break;
+    case 'rapid':
+      shipColor = '#ffff00'; glowColor = '#ffff00'; glowStrength = 30; break;
+    case 'multi':
+      shipColor = '#ff00ff'; glowColor = '#ff00ff'; glowStrength = 30; break;
+    case 'megabomb':
+      shipColor = '#ff8800'; glowColor = '#ff8800'; glowStrength = 25; break;
+    case 'timeslow':
+      shipColor = '#aa00ff'; glowColor = '#aa00ff'; glowStrength = 25; break;
+    case 'magnet':
+      shipColor = '#00aaff'; glowColor = '#00aaff'; glowStrength = 25; break;
+    case 'laser':
+      shipColor = '#00ff00'; glowColor = '#00ff00'; glowStrength = 25; break;
+  }
+
+  ctx.fillStyle = shipColor;
   ctx.strokeStyle = '#fff';
   ctx.lineWidth = 2;
-  ctx.shadowBlur = ship.powerup === 'shield' ? 20 : 0;
-  ctx.shadowColor = '#ff0';
+  ctx.shadowBlur = glowStrength;
+  ctx.shadowColor = glowColor || '#0ff';
+
   ctx.beginPath();
   ctx.moveTo(22, 0);
   ctx.lineTo(-12, 12);
@@ -264,19 +241,18 @@ function loop() {
   ctx.shadowBlur = 0;
   ctx.restore();
 
-  // SPAWN ASTEROIDES
-  const maxAst = 8 + Math.floor(score / 500);
-  const spawnRate = 0.02 + (score / 40000);
-  if (asteroids.length < maxAst && Math.random() < spawnRate) {
+  // Spawn asteroides (controlado)
+  const maxAst = 20 + Math.floor(score / 1000);
+  if (asteroids.length < maxAst && Math.random() < 0.012 + score / 100000) {
     spawnAsteroids(1);
   }
 
-  // BOSS SPAWN cada 1500 pts
+  // Boss
   if (score > 0 && score % 1500 === 0 && !bossActive) {
     spawnBoss();
   }
 
-  // Update asteroids
+  // Update & draw asteroides (resto igual que tu original)
   for (let i = asteroids.length - 1; i >= 0; i--) {
     const a = asteroids[i];
     a.x += a.vx;
@@ -285,21 +261,18 @@ function loop() {
     a.vx += (Math.random() - 0.5) * 0.015;
     a.vy += (Math.random() - 0.5) * 0.015;
 
-    // Wrap
     if (a.x < -a.size) a.x = w + a.size;
     if (a.x > w + a.size) a.x = -a.size;
     if (a.y < -a.size) a.y = h + a.size;
     if (a.y > h + a.size) a.y = -a.size;
 
-    // Boss shoot
     if (a.type === 'boss') {
-      a.shootTimer += 1;
+      a.shootTimer = (a.shootTimer || 0) + 1;
       if (a.shootTimer > 90) {
-        // Dispara hacia nave
         const dx = ship.x - a.x;
         const dy = ship.y - a.y;
         const dist = Math.hypot(dx, dy);
-        bullets.push({  // Bala enemiga roja
+        bullets.push({
           x: a.x, y: a.y,
           vx: (dx / dist) * 6,
           vy: (dy / dist) * 6,
@@ -310,7 +283,6 @@ function loop() {
       }
     }
 
-    // Draw ast/boss
     ctx.save();
     ctx.translate(a.x, a.y);
     ctx.rotate(a.angle);
@@ -333,7 +305,6 @@ function loop() {
     ctx.stroke();
     ctx.restore();
 
-    // Boss HP bar
     if (a.type === 'boss') {
       const barW = a.size * 1.8;
       ctx.fillStyle = 'rgba(0,0,0,0.7)';
@@ -343,7 +314,6 @@ function loop() {
       bossHPEl.textContent = a.hp;
     }
 
-    // Colisión nave-ast
     let dist = Math.hypot(ship.x - a.x, ship.y - a.y);
     if (dist < a.size + 20 && ship.powerup !== 'shield') {
       lives--;
@@ -374,7 +344,6 @@ function loop() {
         bullets.splice(i, 1);
         continue;
       }
-      // Colisión bala enemiga con nave
       if (Math.hypot(ship.x - b.x, ship.y - b.y) < 20 && ship.powerup !== 'shield') {
         lives--;
         livesEl.textContent = lives;
@@ -403,7 +372,6 @@ function loop() {
       continue;
     }
 
-    // Colisión bala-ast
     for (let j = asteroids.length - 1; j >= 0; j--) {
       const a = asteroids[j];
       if (Math.hypot(b.x - a.x, b.y - a.y) < a.size) {
@@ -416,21 +384,17 @@ function loop() {
           score += pts;
           scoreEl.textContent = score;
 
-          // SPLIT ASTEROIDES
           if (a.type !== 'boss') {
-            if (a.type === 'large') {
-              spawnAsteroids(2, 'med');
-            } else if (a.type === 'med') {
-              spawnAsteroids(3, 'small');
-            }
+            if (a.type === 'large') spawnAsteroids(2, 'med');
+            else if (a.type === 'med') spawnAsteroids(3, 'small');
           } else {
             bossActive = false;
             bossHPEl.textContent = 0;
           }
 
-          // POWER-UP DROP 40% chance
-          if (Math.random() < 0.4) {
-            const types = ['multi', 'rapid', 'shield'];
+          // Drop power-up (50% chance)
+          if (Math.random() < 0.5) {
+            const types = ['multi', 'rapid', 'shield', 'megabomb', 'timeslow', 'magnet', 'laser'];
             powerups.push({
               x: a.x, y: a.y,
               type: types[Math.floor(Math.random()*types.length)],
@@ -439,7 +403,6 @@ function loop() {
             });
           }
 
-          // Partículas
           for (let k = 0; k < 15; k++) {
             particles.push({
               x: a.x, y: a.y,
@@ -456,17 +419,22 @@ function loop() {
     }
   }
 
-  // Power-ups
+  // Power-ups (sin cambios en draw, ya usan color)
   for (let i = powerups.length - 1; i >= 0; i--) {
     const p = powerups[i];
     p.y += p.vy;
     p.life--;
-    p.x += Math.sin(Date.now() * 0.01 + i) * 0.5;  // Bob
+    p.x += Math.sin(Date.now() * 0.01 + i) * 0.5;
 
-    // Draw
     ctx.save();
     ctx.translate(p.x, p.y);
-    ctx.fillStyle = p.type === 'multi' ? '#f0f' : p.type === 'rapid' ? '#ff0' : '#0ff';
+    ctx.fillStyle = p.type === 'multi' ? '#ff00ff' :    // rosa
+                    p.type === 'rapid' ? '#ffff00' :     // amarillo
+                    p.type === 'shield' ? '#00ffff' :    // cian
+                    p.type === 'megabomb' ? '#ff8800' :
+                    p.type === 'timeslow' ? '#aa00ff' :
+                    p.type === 'magnet' ? '#00aaff' :
+                    p.type === 'laser' ? '#00ff00' : '#fff';
     ctx.shadowBlur = 25;
     ctx.shadowColor = ctx.fillStyle;
     ctx.beginPath();
@@ -478,10 +446,9 @@ function loop() {
     ctx.stroke();
     ctx.restore();
 
-    // Collect
     if (Math.hypot(ship.x - p.x, ship.y - p.y) < 25) {
       ship.powerup = p.type;
-      ship.powerupTime = 600;  // 10s aprox
+      ship.powerupTime = 600;
       powerups.splice(i, 1);
     } else if (p.life <= 0 || p.y > h) {
       powerups.splice(i, 1);
@@ -509,4 +476,4 @@ function loop() {
 }
 </script>
 </body>
-</html>
+  </html>

@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Asteroids Survival PRO - Test.V4.4 Glow Power-Ups</title>
+<title>Asteroids Survival PRO - Nuclear y Megabomb FIXED</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <style>
   body { margin:0; padding:0; background:#000; overflow:hidden; touch-action:none; font-family:Arial,sans-serif; }
@@ -23,10 +23,10 @@
 </div>
 
 <div id="start">
-  <h1>Asteroids Survival PRO - Test.V4.4</h1>
+  <h1>Asteroids Survival PRO</h1>
   <p>¡Toca la pantalla para empezar!</p>
   <p>Arrastra para mover • Toca para disparar</p>
-  <p>Power-ups con glow de color</p>
+  <p>Megabomb (naranja): toque largo • Nuclear (rojo): auto al recoger</p>
   <button onclick="startGame()">JUGAR</button>
 </div>
 
@@ -68,7 +68,8 @@ const ship = {
   angle: -Math.PI/2,
   radius: 15,
   powerup: null,
-  powerupTime: 0
+  powerupTime: 0,
+  touchStartTime: 0  // para megabomb toque largo
 };
 
 let asteroids = [];
@@ -95,11 +96,11 @@ function startGame() {
   bullets = [];
   powerups = [];
   particles = [];
-  spawnAsteroids(5);
+  spawnAsteroides(5);
   loop();
 }
 
-function spawnAsteroids(count, size = 'large') {
+function spawnAsteroides(count, size = 'large') {
   for (let i = 0; i < count; i++) {
     let side = Math.floor(Math.random()*4);
     let x, y;
@@ -143,6 +144,7 @@ canvas.addEventListener('touchstart', e => {
   const t = e.touches[0];
   touchX = t.clientX;
   touchY = t.clientY;
+  ship.touchStartTime = Date.now(); // para toque largo megabomb
   fire();
 }, {passive: false});
 
@@ -158,12 +160,46 @@ canvas.addEventListener('touchmove', e => {
   touchY = t.clientY;
 }, {passive: false});
 
-canvas.addEventListener('touchend', e => { e.preventDefault(); touchActive = false; }, {passive: false});
+canvas.addEventListener('touchend', e => {
+  e.preventDefault();
+  touchActive = false;
+  const touchDuration = Date.now() - ship.touchStartTime;
+
+  // Megabomb: toque largo > 800ms
+  if (ship.powerup === 'megabomb' && touchDuration > 800) {
+    triggerMegabomb();
+  }
+
+  ship.touchStartTime = 0;
+}, {passive: false});
 
 canvas.addEventListener('click', e => {
   if (!running) { startGame(); return; }
   fire();
 });
+
+function triggerMegabomb() {
+  // Explosión radial
+  for (let i = asteroids.length - 1; i >= 0; i--) {
+    const a = asteroids[i];
+    if (Math.hypot(ship.x - a.x, ship.y - a.y) < 200) {
+      asteroids.splice(i, 1);
+      score += Math.floor(a.size * 3);
+      // partículas explosión
+      for (let k = 0; k < 30; k++) {
+        particles.push({
+          x: a.x, y: a.y,
+          vx: (Math.random()-0.5)*12,
+          vy: (Math.random()-0.5)*12,
+          life: 50
+        });
+      }
+    }
+  }
+  // Flash naranja
+  ctx.fillStyle = 'rgba(255,136,0,0.6)';
+  ctx.fillRect(0,0,w,h);
+}
 
 function fire() {
   const now = Date.now();
@@ -191,37 +227,28 @@ function loop() {
   ctx.fillStyle = 'rgba(0,5,15,0.18)';
   ctx.fillRect(0,0,w,h);
 
-  // Nave wrap & powerup timer
   ship.x = (ship.x + w) % w;
   ship.y = (ship.y + h) % h;
   if (ship.powerupTime > 0) ship.powerupTime--;
   else ship.powerup = null;
 
-  // Dibujar nave con glow de color según power-up
+  // Nave con glow
   ctx.save();
   ctx.translate(ship.x, ship.y);
   ctx.rotate(ship.angle);
 
-  // Glow y color personalizado
-  let shipColor = '#0ff';  // default
+  let shipColor = '#0ff';
   let glowColor = null;
   let glowStrength = 0;
 
   switch (ship.powerup) {
-    case 'shield':
-      shipColor = '#ff0'; glowColor = '#ff0'; glowStrength = 25; break;
-    case 'rapid':
-      shipColor = '#ffff00'; glowColor = '#ffff00'; glowStrength = 30; break;
-    case 'multi':
-      shipColor = '#ff00ff'; glowColor = '#ff00ff'; glowStrength = 30; break;
-    case 'megabomb':
-      shipColor = '#ff8800'; glowColor = '#ff8800'; glowStrength = 25; break;
-    case 'timeslow':
-      shipColor = '#aa00ff'; glowColor = '#aa00ff'; glowStrength = 25; break;
-    case 'magnet':
-      shipColor = '#00aaff'; glowColor = '#00aaff'; glowStrength = 25; break;
-    case 'laser':
-      shipColor = '#00ff00'; glowColor = '#00ff00'; glowStrength = 25; break;
+    case 'shield': shipColor = '#dbfffe'; glowColor = '#dbfffe'; glowStrength = 25; break;
+    case 'rapid': shipColor = '#ffff00'; glowColor = '#ffff00'; glowStrength = 30; break;
+    case 'multi': shipColor = '#ff00ff'; glowColor = '#ff00ff'; glowStrength = 30; break;
+    case 'megabomb': shipColor = '#ff8800'; glowColor = '#ff8800'; glowStrength = 25; break;
+    case 'timeslow': shipColor = '#aa00ff'; glowColor = '#aa00ff'; glowStrength = 25; break;
+    case 'magnet': shipColor = '#00aaff'; glowColor = '#00aaff'; glowStrength = 25; break;
+    case 'laser': shipColor = '#00ff00'; glowColor = '#00ff00'; glowStrength = 25; break;
   }
 
   ctx.fillStyle = shipColor;
@@ -241,23 +268,27 @@ function loop() {
   ctx.shadowBlur = 0;
   ctx.restore();
 
-  // Spawn asteroides (controlado)
-  const maxAst = 20 + Math.floor(score / 1000);
-  if (asteroids.length < maxAst && Math.random() < 0.012 + score / 100000) {
-    spawnAsteroids(1);
+  // Spawn asteroides
+  const maxAst = 18 + Math.floor(score / 1500);
+  if (asteroids.length < maxAst && Math.random() < 0.008 + score / 150000) {
+    spawnAsteroides(1);
   }
 
-  // Boss
+  // Boss cada 1500
   if (score > 0 && score % 1500 === 0 && !bossActive) {
     spawnBoss();
   }
 
-  // Update & draw asteroides (resto igual que tu original)
+  // Update asteroides
   for (let i = asteroids.length - 1; i >= 0; i--) {
     const a = asteroids[i];
-    a.x += a.vx;
-    a.y += a.vy;
+    let speedMult = 1;
+    if (ship.powerup === 'timeslow') speedMult = 0.4;
+
+    a.x += a.vx * speedMult;
+    a.y += a.vy * speedMult;
     a.angle += a.rotSpeed;
+
     a.vx += (Math.random() - 0.5) * 0.015;
     a.vy += (Math.random() - 0.5) * 0.015;
 
@@ -326,6 +357,16 @@ function loop() {
         return;
       }
     }
+
+    if (ship.powerup === 'magnet') {
+      let dx = ship.x - a.x;
+      let dy = ship.y - a.y;
+      let distToShip = Math.hypot(dx, dy);
+      if (distToShip < 300) {
+        a.vx += dx / distToShip * 0.5;
+        a.vy += dy / distToShip * 0.5;
+      }
+    }
   }
 
   // Balas jugador
@@ -385,16 +426,15 @@ function loop() {
           scoreEl.textContent = score;
 
           if (a.type !== 'boss') {
-            if (a.type === 'large') spawnAsteroids(2, 'med');
-            else if (a.type === 'med') spawnAsteroids(3, 'small');
+            if (a.type === 'large') spawnAsteroides(2, 'med');
+            else if (a.type === 'med') spawnAsteroides(3, 'small');
           } else {
             bossActive = false;
             bossHPEl.textContent = 0;
           }
 
-          // Drop power-up (50% chance)
-          if (Math.random() < 0.5) {
-            const types = ['multi', 'rapid', 'shield', 'megabomb', 'timeslow', 'magnet', 'laser'];
+          if (Math.random() < 0.4) {
+            const types = ['multi', 'rapid', 'shield', 'megabomb', 'timeslow', 'magnet', 'laser', 'nuclear'];
             powerups.push({
               x: a.x, y: a.y,
               type: types[Math.floor(Math.random()*types.length)],
@@ -419,7 +459,7 @@ function loop() {
     }
   }
 
-  // Power-ups (sin cambios en draw, ya usan color)
+  // Power-ups
   for (let i = powerups.length - 1; i >= 0; i--) {
     const p = powerups[i];
     p.y += p.vy;
@@ -428,13 +468,14 @@ function loop() {
 
     ctx.save();
     ctx.translate(p.x, p.y);
-    ctx.fillStyle = p.type === 'multi' ? '#ff00ff' :    // rosa
-                    p.type === 'rapid' ? '#ffff00' :     // amarillo
-                    p.type === 'shield' ? '#00ffff' :    // cian
+    ctx.fillStyle = p.type === 'multi' ? '#ff00ff' :
+                    p.type === 'rapid' ? '#ffff00' :
+                    p.type === 'shield' ? '#dbfffe' :
                     p.type === 'megabomb' ? '#ff8800' :
                     p.type === 'timeslow' ? '#aa00ff' :
                     p.type === 'magnet' ? '#00aaff' :
-                    p.type === 'laser' ? '#00ff00' : '#fff';
+                    p.type === 'laser' ? '#00ff00' :
+                    p.type === 'nuclear' ? '#ff0000' : '#fff';
     ctx.shadowBlur = 25;
     ctx.shadowColor = ctx.fillStyle;
     ctx.beginPath();
@@ -449,9 +490,42 @@ function loop() {
     if (Math.hypot(ship.x - p.x, ship.y - p.y) < 25) {
       ship.powerup = p.type;
       ship.powerupTime = 600;
+
+      // Efectos inmediatos
+      if (p.type === 'nuclear') {
+        triggerNuclear();
+      }
+
       powerups.splice(i, 1);
     } else if (p.life <= 0 || p.y > h) {
       powerups.splice(i, 1);
+    }
+  }
+
+  // Efecto Laser
+  if (ship.powerup === 'laser' && touchActive) {
+    ctx.beginPath();
+    ctx.moveTo(ship.x, ship.y);
+    ctx.lineTo(touchX, touchY);
+    ctx.strokeStyle = '#00ff00';
+    ctx.lineWidth = 5;
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = '#00ff00';
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Daño continuo
+    for (let i = asteroids.length - 1; i >= 0; i--) {
+      const a = asteroids[i];
+      let distToLine = Math.abs((touchY - ship.y) * (a.x - ship.x) - (touchX - ship.x) * (a.y - ship.y)) / Math.hypot(touchX - ship.x, touchY - ship.y);
+      if (distToLine < a.size + 10) {
+        a.hp = (a.hp || 1) - 0.5;
+        if (a.hp <= 0) {
+          score += Math.floor(a.size * 2);
+          scoreEl.textContent = score;
+          asteroids.splice(i, 1);
+        }
+      }
     }
   }
 
@@ -474,6 +548,29 @@ function loop() {
 
   requestAnimationFrame(loop);
 }
+
+function triggerNuclear() {
+  // Flash rojo + partículas
+  ctx.fillStyle = 'rgba(255,0,0,0.7)';
+  ctx.fillRect(0,0,w,h);
+
+  for (let k = 0; k < 80; k++) {
+    particles.push({
+      x: ship.x, y: ship.y,
+      vx: (Math.random()-0.5)*15,
+      vy: (Math.random()-0.5)*15,
+      life: 80
+    });
+  }
+
+  // Destruye todos
+  asteroids = [];
+
+  // Vuelven después de 1s
+  setTimeout(() => {
+    if (running) spawnAsteroides(8, 'large');
+  }, 1000);
+}
 </script>
 </body>
-  </html>
+</html>

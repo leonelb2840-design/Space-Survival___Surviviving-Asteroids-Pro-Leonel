@@ -59,6 +59,7 @@ Ideas rápidas para futuras versiones:
 - Más power-ups (mega-bomba, slow-motion)
 - Modo multijugador local (dos naves en pantalla)
 - Diferentes tipos de boss
+- Musica:NCS[https://youtu.be/S19UcWdOA-I?si=Z-9lmFeDKrIafusW]
 
 ¡Haz un fork, abre un pull request o simplemente comparte tu highscore en los comentarios! 🚀
 

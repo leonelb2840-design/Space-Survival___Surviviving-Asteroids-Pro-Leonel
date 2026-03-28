@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <title>Asteroids Survival PRO - Nuclear y Megabomb FIXED</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#39ff14">
+<link rel="apple-touch-icon" href="logo-app.jpg">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <style>
   body { margin:0; padding:0; background:#000; overflow:hidden; touch-action:none; font-family:Arial,sans-serif; }
@@ -576,6 +580,15 @@ function triggerNuclear() {
 if (typeof navigator.serviceWorker !== 'undefined') {
   navigator.serviceWorker.register('sw.js')
 }
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('Space Surviving: Modo Offline Activo', reg))
+        .catch(err => console.error('Error PWA', err));
+    });
+  }
 </script>
+
 </body>
 </html>

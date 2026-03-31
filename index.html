@@ -5,7 +5,7 @@
 <title>Asteroids Survival PRO - Nuclear y Megabomb FIXED</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#39ff14">
-<link rel="apple-touch-icon" href="logo-app.jpg">
+<link rel="apple-touch-icon" href="logo-app.png">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <style>
@@ -577,18 +577,18 @@ function triggerNuclear() {
 }
 </script>
 <script>
-if (typeof navigator.serviceWorker !== 'undefined') {
-  navigator.serviceWorker.register('sw.js')
-}
-<script>
+  // 🚀 Control de Misión: Registro del Service Worker
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./sw.js')
-        .then(reg => console.log('Space Surviving: Modo Offline Activo', reg))
-        .catch(err => console.error('Error PWA', err));
+        .then(reg => {
+          console.log('%c🚀 [SPACE-SURVIVAL]: ¡Sistemas en línea! Nave lista para el hiperespacio.', 'color: #00ff00; font-weight: bold; background: #000; padding: 5px;');
+        })
+        .catch(err => {
+          console.error('%c❌ [SPACE-SURVIVAL]: ¡Fallo en el motor de salto!', 'color: #ff0000; font-weight: bold;', err);
+        });
     });
   }
 </script>
-
 </body>
 </html>

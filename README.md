@@ -38,7 +38,7 @@ Un juego de supervivencia estilo **Asteroids** hecho 100% con **HTML5 Canvas + J
 
 ### Enlaces del creador
 
-- **YouTube**: [https://youtube.com/@officialleonelb284](https://youtube.com/@officialleonelb284?si=A1VDLfNOvZBK8JyL)  
+- **YouTube**: [https://youtube.com/@official-leonelb](https://youtube.com/@official-leonelb?si=A1VDLfNOvZBK8JyL)  
   (Suscríbete para ver más juegos, tutoriales y actualizaciones)
 
 - **GitHub**: [https://github.com/leonelb2840-design](https://github.com/leonelb2840-design)  
